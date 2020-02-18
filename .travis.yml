@@ -1,0 +1,21 @@
+language: go
+go:
+  - "1.13"
+install:
+  - export GO111MODULE="on"
+  - go mod download
+  - go get -v github.com/smartystreets/goconvey/convey
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.15.0
+script:
+  - golangci-lint run --fast
+  - go build -o bin/s4-linux-amd64
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "PNzWJy0uJvV3TZBe0q1EgZC0y3Aqx2SLFb6zCBZNqHMxA6YFnQAZGi8tOABRdPrzs5umOw7T8opxC5sOdMgbgVT98DaoOxkmgIqezzVRMBgzBeUDswkIFSA2Hw2c7dhEeV3vZEBS9abNkv2lGnkh7eKMtH5Pro3Zw4y+68vK9aDWUitYEY7toGI+TZ13qYmKiwpfVfMMnshMEe2RPt1vCZu/7jc1Z+o5SUjDDhWA7oe4I6MR6xksWJpE7zQLiIK6kaswfk8Z5AtvL0ZceYkI9TaLJifQ0zZ/kOQeCbrbD0TjiOlfxvec24vHcOM9xBwUBGFNa7f8h7uzwdWcHaf2wHb17YVKL7SbKuAyDsl0OjhXPza3QwU/xuKTi/+YRjxVh3o1/hsV7O8taBp18v5J48kLpRN9P4VXnU3B074eFJryNe41a7bxTNTKO+lvVYFup2sqsCiwyjn46d0Sb9HC85kYToxZSXkBNeKXZpID4AxEZYlrRDrbM84h+wXZ94H4oWFMkSyLYt9w75E9s57QAx4g7h9peE4G/Yv3Iwljrb8Qhj5KfmURA0SXi5ZocivQgKzdG9U7jE5HChme1CcpgyMz02putH2utjeD38ScddOQ9PVSer3B20izAnXt3K9xYZ/jguB9KMyKta+oa4tmsrXqA32ojdrCtSNc37p8nNY="
+  file:
+    - bin/s4-linux-amd64
+  skip_cleanup: true
+  on:
+    tags: true
