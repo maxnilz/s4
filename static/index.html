@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>s4</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 36px;
+        }
+
+        p {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Welcome to Simple Static Site Service</h1>
+</header>
+<main>
+    <p id="welcome-message"></p>
+</main>
+
+<script>
+    // Array of random welcome messages
+    var welcomeMessages = [
+        "We're thrilled to have you here!",
+        "Welcome to our online community!",
+        "Thanks for visiting our website!",
+        "Explore and enjoy our content!",
+    ];
+
+    // Generate a random index to select a message
+    var randomIndex = Math.floor(Math.random() * welcomeMessages.length);
+
+    // Display the random message
+    var welcomeMessageElement = document.getElementById("welcome-message");
+    welcomeMessageElement.textContent = welcomeMessages[randomIndex];
+</script>
+</body>
+</html>

@@ -62,7 +62,9 @@ func cmd() *cobra.Command {
 
 func runServer(a *args) {
 	// Create gin engine
-	ge := gin.Default()
+	ge := gin.New()
+	ge.Use(gin.LoggerWithFormatter(logFormatter))
+	ge.Use(gin.Recovery())
 	ge.Use(cors.New(cors.Config{
 		AllowOrigins:     a.allowOrigins,
 		AllowMethods:     a.allowMethods,
@@ -84,4 +86,28 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
+}
+
+var logFormatter = func(param gin.LogFormatterParams) string {
+	var statusColor, methodColor, resetColor string
+	if param.IsOutputColor() {
+		statusColor = param.StatusCodeColor()
+		methodColor = param.MethodColor()
+		resetColor = param.ResetColor()
+	}
+
+	if param.Latency > time.Minute {
+		// Truncate in a golang < 1.8 safe way
+		param.Latency = param.Latency - param.Latency%time.Second
+	}
+	return fmt.Sprintf("[GIN] %v |%s %3d %s| %13v | %15s |%s %-7s %s %s %s\n%s",
+		param.TimeStamp.Format("2006/01/02 - 15:04:05"),
+		statusColor, param.StatusCode, resetColor,
+		param.Latency,
+		param.ClientIP,
+		methodColor, param.Method, resetColor,
+		param.Request.UserAgent(),
+		param.Path,
+		param.ErrorMessage,
+	)
 }
