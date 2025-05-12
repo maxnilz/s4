@@ -16,7 +16,14 @@ import (
 type args struct {
 	listenAddr string
 	// Static site asset location
+	staticBasePath string
 	staticAssetDir string
+
+	// Basic Auth require asset location
+	basicAuthBasePath  string
+	basicAuthAssertDir string
+	basicAuthUsername  string
+	basicAuthPassword  string
 
 	allowOrigins     []string
 	allowMethods     []string
@@ -27,8 +34,15 @@ type args struct {
 
 func defaultArgs() *args {
 	return &args{
-		listenAddr:       ":9112",
-		staticAssetDir:   "static",
+		listenAddr:     ":9112",
+		staticBasePath: "/_static/public",
+		staticAssetDir: "static",
+
+		basicAuthBasePath:  "/_static/auth",
+		basicAuthAssertDir: "statica",
+		basicAuthUsername:  "alice",
+		basicAuthPassword:  "secret",
+
 		allowOrigins:     []string{"*"},
 		allowMethods:     []string{"*"},
 		allowHeaders:     []string{"*"},
@@ -50,7 +64,12 @@ func cmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&a.listenAddr, "address", a.listenAddr, "the address which server will serve at")
+	cmd.Flags().StringVar(&a.staticBasePath, "base-path", a.staticBasePath, "the http base path to serve static assets")
 	cmd.Flags().StringVar(&a.staticAssetDir, "asset-dir", a.staticAssetDir, "the static site asset dir")
+	cmd.Flags().StringVar(&a.basicAuthBasePath, "base-auth-path", a.basicAuthBasePath, "the http base path to serve basic auth enabled static assets")
+	cmd.Flags().StringVar(&a.basicAuthAssertDir, "auth-asset-dir", a.staticAssetDir, "the basic auth enabled static site asset dir")
+	cmd.Flags().StringVar(&a.basicAuthUsername, "auth-user", a.basicAuthUsername, "basic auth user name")
+	cmd.Flags().StringVar(&a.basicAuthPassword, "auth-pass", a.basicAuthPassword, "basic auth password")
 	cmd.Flags().StringSliceVar(&a.allowOrigins, "allow-origins", a.allowOrigins, "allow origins")
 	cmd.Flags().StringSliceVar(&a.allowMethods, "allow-methods", a.allowMethods, "allow methods")
 	cmd.Flags().StringSliceVar(&a.allowHeaders, "allow-headers", a.allowHeaders, "allow headers")
@@ -65,6 +84,7 @@ func runServer(a *args) {
 	ge := gin.New()
 	ge.Use(gin.LoggerWithFormatter(logFormatter))
 	ge.Use(gin.Recovery())
+	ge.Use(gzip.Gzip(gzip.DefaultCompression))
 	ge.Use(cors.New(cors.Config{
 		AllowOrigins:     a.allowOrigins,
 		AllowMethods:     a.allowMethods,
@@ -73,7 +93,14 @@ func runServer(a *args) {
 		AllowCredentials: a.allowCredentials,
 		MaxAge:           12 * time.Hour,
 	}))
-	ge.Static("/", a.staticAssetDir).Use(gzip.Gzip(gzip.DefaultCompression))
+
+	g := ge.Group(a.staticBasePath)
+	g.Static("/", a.staticAssetDir)
+
+	if a.basicAuthAssertDir != "" {
+		ag := ge.Group(a.basicAuthBasePath, gin.BasicAuth(gin.Accounts{a.basicAuthUsername: a.basicAuthPassword}))
+		ag.Static("/", a.basicAuthAssertDir)
+	}
 
 	err := http.ListenAndServe(a.listenAddr, ge)
 	if err != nil {

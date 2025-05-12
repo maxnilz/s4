@@ -1,10 +1,10 @@
-FROM golang:1.20.6-alpine3.18 as builder
+FROM golang:1.23-alpine3.21 AS builder
 
 COPY . /build
 WORKDIR /build
 RUN go build -o s4
 
-FROM alpine:3.18
+FROM alpine:3.21
 
 COPY --from=builder /build/s4 /usr/local/s4/s4
 COPY --from=builder /build/static /usr/local/s4/static
